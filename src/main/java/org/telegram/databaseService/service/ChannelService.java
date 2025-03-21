@@ -19,7 +19,7 @@ public class ChannelService {
         channelRepository.save(channel);
     }
 
-    public void DeleteChannel(Channel channel) {
+    public void deleteChannel(Channel channel) {
         channelRepository.delete(channel);
     }
 

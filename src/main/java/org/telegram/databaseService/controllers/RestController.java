@@ -1,10 +1,9 @@
 package org.telegram.databaseService.controllers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.telegram.databaseService.annotations.Logging;
 import org.telegram.databaseService.entity.Channel;
@@ -16,6 +15,7 @@ import org.telegram.databaseService.service.ChatService;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.NoSuchElementException;
 
 @org.springframework.web.bind.annotation.RestController
 @RequestMapping("/dataBase/api")
@@ -38,22 +38,134 @@ public class RestController {
      * @param chatId
      * @return
      */
-    @Logging(entering = true,exiting = true)
+    @Logging(entering = true, exiting = true)
     @PostMapping("/getChatByChatId")
-    public String getChatByChatId(@RequestBody String chatId) {
+    public String getChatByChatId(@RequestHeader("chatId") String chatId) {
         try {
-            return mapper.writeValueAsString(chatService.findChat(Long.parseLong(chatId)));
+            try {
+                return mapper.writeValueAsString(chatService.findChat(Long.parseLong(chatId)));
+            } catch (NoSuchElementException e) {
+                return null;
+            }
         } catch (Exception e) {
             return e.toString();
         }
     }
 
-    @Logging(entering = true,exiting = true)
-    @PostMapping("/saveChat")
-    public String saveChat(@RequestBody String chatId) {
+    @Logging(entering = true, exiting = true)
+    @PostMapping("/getAllChats")
+    public String getChats() {
         try {
-            chatService.saveChat(new Chat(Long.parseLong(chatId), new ArrayList<>()));
+            return mapper.writeValueAsString(chatService.getAllChats());
+        } catch (Exception e) {
+            return Status.FAIL.toString();
+        }
+    }
+
+    @Logging(entering = true, exiting = true)
+    @PostMapping("/getAllChatIdOfChats")
+    public String getAllChatIdOfChats() {
+        try {
+            List<Chat> chats = chatService.getAllChats();
+            return mapper.writeValueAsString(chats.stream().map(a -> a.getChatId()).toList());
+        } catch (Exception e) {
+            return Status.FAIL.toString();
+        }
+    }
+
+    @Logging(entering = true, exiting = true)
+    @PostMapping("/saveChat")
+    public String saveChat(@RequestBody String chat) {
+        try {
+            chatService.saveChat(mapper.readValue(chat, Chat.class));
             return Status.SUCCESS.toString();
+        } catch (Exception e) {
+            return Status.FAIL.toString();
+        }
+    }
+
+    @Logging(entering = true, exiting = true)
+    @PostMapping("/addChannelInChatByChatId")
+    public String addChannelInChatByChatId(@RequestHeader("chatId") String chatId, @RequestBody String body_channel) {
+        try {
+            Chat chat = chatService.findChat(Long.parseLong(chatId));
+
+            if (chat != null) {
+
+                Channel channel = mapper.readValue(body_channel, Channel.class);
+
+                Channel channelInBase = channelService.findChannel(channel.getChatId());
+                if (channelInBase != null) {
+                    channelInBase.addChat(chat);
+                    channelInBase.setTitle(channel.getTitle());
+                    channelInBase.setInviteLink(channel.getInviteLink());
+                    channelService.saveChannel(channelInBase);
+                    chat.addChannel(channelInBase);
+                } else {
+                    channel.setChats(new ArrayList<>());
+                    channel.addChat(chat);
+
+                    channelService.saveChannel(channel);
+                    chat.addChannel(channel);
+                }
+
+                chatService.saveChat(chat);
+
+                return Status.SUCCESS.toString();
+            }
+            return Status.FAIL.toString();
+        } catch (Exception e) {
+            return Status.FAIL.toString();
+        }
+    }
+
+    @Logging(entering = true, exiting = true)
+    @PostMapping("/removeChannelFromChat")
+    public String removeChannelFromChat(@RequestHeader("chatId") String chatId,@RequestHeader("channelChatId") String channelChatId) {
+        try {
+            Chat chat = chatService.findChat(Long.parseLong(chatId));
+            Channel channel = channelService.findChannel(Long.parseLong(channelChatId));
+
+            if (chat != null && channel != null) {
+
+                chat.deleteChannel(channel.getChatId());
+                channel.removeChat(chat.getChatId());
+
+                channelService.saveChannel(channel);
+                chatService.saveChat(chat);
+
+                return Status.SUCCESS.toString();
+            }
+            return Status.FAIL.toString();
+        } catch (Exception e) {
+            return Status.FAIL.toString();
+        }
+    }
+
+
+    @Logging(entering = true, exiting = true)
+    @PostMapping("/getChatChannelsByChatId")
+    public String getChatChannelsByChatId(@RequestHeader("chatId") String chatId) {
+        try {
+            Chat chat = chatService.findChat(Long.parseLong(chatId));
+            if (chat != null) {
+                return mapper.writeValueAsString(chat.getChanelList());
+            }
+            return Status.FAIL.toString();
+        } catch (Exception e) {
+            return Status.FAIL.toString();
+        }
+    }
+
+    @Logging(entering = true, exiting = true)
+    @PostMapping("/getChannelChatsByChatId")
+    public String getChannelChatsByChannelId(@RequestHeader("chatId") String chatId) {
+        try {
+            Channel channel = channelService.findChannel(Long.parseLong(chatId));
+            if (channel != null) {
+                return mapper.writeValueAsString(channel.getChats());
+            }
+            return Status.FAIL.toString();
         } catch (Exception e) {
             return Status.FAIL.toString();
         }
@@ -66,9 +178,13 @@ public class RestController {
      * @return
      */
     @PostMapping("/getChannelByInviteLink")
-    public String getChannelByInviteLink(@RequestBody String InviteLink) {
+    public String getChannelByInviteLink(@RequestHeader("inviteLink") String inviteLink) {
         try {
-            return mapper.writeValueAsString(channelService.findChannelByInviteLink(InviteLink));
+            try {
+                return mapper.writeValueAsString(channelService.findChannelByInviteLink(inviteLink));
+            } catch (NoSuchElementException e) {
+                return null;
+            }
         } catch (Exception e) {
             return e.toString();
         }
@@ -80,9 +196,9 @@ public class RestController {
      * @param chatId
      * @return
      */
-    @Logging(entering = true,exiting = true)
+    @Logging(entering = true, exiting = true)
     @PostMapping("/getChannelByChatId")
-    public String getChannelByChatId(@RequestBody String chatId) {
+    public String getChannelByChatId(@RequestHeader String chatId) {
         try {
             return mapper.writeValueAsString(channelService.findChannel(Long.parseLong(chatId)));
         } catch (Exception e) {
@@ -100,6 +216,52 @@ public class RestController {
             return mapper.writeValueAsString(channelList);
         } catch (Exception e) {
             return e.toString();
+        }
+    }
+
+    /**
+     * <b>getPopularChannels</b> - возвращает 5 каналов с наибольшим числом подписчиков
+     */
+    @PostMapping("/deleteChannel")
+    public String deleteChannel(@RequestHeader String chatId) {
+        try {
+            Channel channel = channelService.findChannel(Long.parseLong(chatId));
+            channelService.deleteChannel(channel);
+            return Status.SUCCESS.toString();
+        } catch (Exception e) {
+            return Status.FAIL.toString();
+        }
+    }
+
+    @Logging(entering = true, exiting = true)
+    @PostMapping("/saveChannel")
+    public String saveChannel(@RequestBody String channel) {
+        try {
+            Channel channelEntity = mapper.readValue(channel, Channel.class);
+            channelService.saveChannel(channelEntity);
+            return Status.SUCCESS.toString();
+        } catch (Exception e) {
+            return Status.FAIL.toString();
+        }
+    }
+
+    @Logging(entering = true, exiting = true)
+    @PostMapping("/getChannelRating")
+    public String getChannelRating() {
+        try {
+            List<Channel> channels = channelService.getAllChannels();
+            channels.sort((a, b) -> Integer.compare(b.getChats().size(), a.getChats().size()));
+
+            if(channels.size() > 5)
+            {
+                return  mapper.writeValueAsString(channels.subList(0,5));
+            }
+            else
+            {
+                return mapper.writeValueAsString(channels);
+            }
+        } catch (Exception e) {
+            return Status.FAIL.toString();
         }
     }
 }

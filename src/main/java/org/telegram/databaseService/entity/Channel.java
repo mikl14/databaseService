@@ -1,6 +1,6 @@
 package org.telegram.databaseService.entity;
 
-import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.*;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -12,6 +12,7 @@ public class Channel {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Getter
     private Long id;
 
     @Setter
@@ -28,8 +29,8 @@ public class Channel {
 
     @Setter
     @Getter
+    @JsonIgnore
     @ManyToMany(fetch = FetchType.EAGER)
-    @JsonBackReference
     @JoinTable(
             name = "chat_channel",
             joinColumns = @JoinColumn(name = "channel_id"),
@@ -59,9 +60,7 @@ public class Channel {
         }
     }
 
-    public void removeChat(Chat chat) {
-        if (chats.stream().anyMatch(x -> x.getChatId().equals(chat.getChatId()))) {
-            chats.remove(chat);
-        }
+    public void removeChat(Long chatId) {
+        chats.removeIf(a -> a.getChatId().equals(chatId));
     }
 }

@@ -1,5 +1,6 @@
 package org.telegram.databaseService.entity;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.Getter;
@@ -12,6 +13,7 @@ public class Chat {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Getter
     private Long id;
 
     @Setter
@@ -20,8 +22,7 @@ public class Chat {
 
     @Setter
     @Getter
-    @ManyToMany(mappedBy = "chats", fetch = FetchType.EAGER)
-    @JsonManagedReference
+    @ManyToMany(mappedBy = "chats", fetch = FetchType.EAGER,cascade = {CascadeType.PERSIST, CascadeType.MERGE})
     private List<Channel> chanelList;
 
     public Chat() {

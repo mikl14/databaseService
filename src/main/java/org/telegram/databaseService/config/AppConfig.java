@@ -17,4 +17,5 @@ public class AppConfig {
         return new ObjectMapper()
                 .registerModule(new JavaTimeModule());
     }
+
 }
