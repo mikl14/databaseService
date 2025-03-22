@@ -5,7 +5,7 @@ plugins {
 }
 
 group = 'org.telegram'
-version = '0.0.1-SNAPSHOT'
+version = '0.0.3-SNAPSHOT'
 
 java {
 	toolchain {
@@ -39,6 +39,12 @@ dependencies {
 	implementation 'org.flywaydb:flyway-core:9.22.3'
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+bootJar {
+	tasks.named('bootJar') {
+		mainClass.set('org.telegram.databaseService.DatabaseServiceApplication') // Укажите ваш главный класс здесь
+	}
 }
 
 tasks.named('test') {

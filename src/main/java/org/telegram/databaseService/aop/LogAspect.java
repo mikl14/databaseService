@@ -14,6 +14,7 @@ import org.springframework.stereotype.Component;
 import org.telegram.databaseService.annotations.Logging;
 import org.telegram.databaseService.requests.Status;
 
+import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.time.LocalDate;
@@ -87,7 +88,12 @@ public class LogAspect {
         }
         if (logging.exiting() || logging.entering()) {
             String currentDateString = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
-            String logFileName = "logs/log-" + currentDateString + ".json";
+            String logFileName = "logs/log-databaseService" + currentDateString + ".json";
+
+            File logDir = new File("logs");
+            if (!logDir.exists()) {
+                logDir.mkdir();
+            }
 
             try {
                 String logJson = objectMapper.writeValueAsString(logMap);

@@ -100,6 +100,30 @@ public class RestController {
     }
 
     /**
+     * <b>saveChat</b> - сохраняет Chat в базу данных
+     *
+     * @return Https.status
+     */
+    @Logging(entering = true, exiting = true, returnData = true)
+    @PostMapping("/deleteChat")
+    public String deleteChat(@RequestHeader String chatId) {
+        try {
+            Chat chat = chatService.findChat(Long.parseLong(chatId));
+            List<Long> channelListIds = chat.getChanelList().stream().map(Channel::getChatId).toList();
+
+            for(Long channelId : channelListIds)
+            {
+                removeChannelFromChat(chatId, String.valueOf(channelId));
+            }
+
+            chatService.deleteChat(chat);
+            return Status.SUCCESS.toString();
+        } catch (Exception e) {
+            return Status.FAIL.toString();
+        }
+    }
+
+    /**
      * <b>addChannelInChatByChatId</b> - Добавляет канал в чат с созданием всех связей
      *
      * @param chatId      chatId чата в который добавляется канал
