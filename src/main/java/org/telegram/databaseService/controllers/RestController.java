@@ -13,7 +13,6 @@ import org.telegram.databaseService.service.ChannelService;
 import org.telegram.databaseService.service.ChatService;
 
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
 import java.util.NoSuchElementException;
 
@@ -38,7 +37,7 @@ public class RestController {
      * @param chatId
      * @return
      */
-    @Logging(entering = true, exiting = true)
+    @Logging(entering = true, exiting = true, returnData = true)
     @PostMapping("/getChatByChatId")
     public String getChatByChatId(@RequestHeader("chatId") String chatId) {
         try {
@@ -52,9 +51,14 @@ public class RestController {
         }
     }
 
-    @Logging(entering = true, exiting = true)
+    /**
+     * <b>getAllChats</b> - возвращает все существующие чаты
+     *
+     * @return
+     */
+    @Logging(entering = true, exiting = true, returnData = true)
     @PostMapping("/getAllChats")
-    public String getChats() {
+    public String getAllChats() {
         try {
             return mapper.writeValueAsString(chatService.getAllChats());
         } catch (Exception e) {
@@ -62,7 +66,13 @@ public class RestController {
         }
     }
 
-    @Logging(entering = true, exiting = true)
+    /**
+     * <b>getAllChatIdOfChats</b> - возвращает все ChatId существующих чатов
+     *
+     * @return List Long
+     */
+
+    @Logging(entering = true, exiting = true, returnData = true)
     @PostMapping("/getAllChatIdOfChats")
     public String getAllChatIdOfChats() {
         try {
@@ -73,7 +83,12 @@ public class RestController {
         }
     }
 
-    @Logging(entering = true, exiting = true)
+    /**
+     * <b>saveChat</b> - сохраняет Chat в базу данных
+     *
+     * @return Https.status
+     */
+    @Logging(entering = true, exiting = true, returnData = true)
     @PostMapping("/saveChat")
     public String saveChat(@RequestBody String chat) {
         try {
@@ -84,15 +99,23 @@ public class RestController {
         }
     }
 
-    @Logging(entering = true, exiting = true)
+    /**
+     * <b>addChannelInChatByChatId</b> - Добавляет канал в чат с созданием всех связей
+     *
+     * @param chatId      chatId чата в который добавляется канал
+     * @param bodyChannel объект добавляемого канала
+     * @return Https.status
+     */
+
+    @Logging(entering = true, exiting = true, returnData = true)
     @PostMapping("/addChannelInChatByChatId")
-    public String addChannelInChatByChatId(@RequestHeader("chatId") String chatId, @RequestBody String body_channel) {
+    public String addChannelInChatByChatId(@RequestHeader("chatId") String chatId, @RequestBody String bodyChannel) {
         try {
             Chat chat = chatService.findChat(Long.parseLong(chatId));
 
             if (chat != null) {
 
-                Channel channel = mapper.readValue(body_channel, Channel.class);
+                Channel channel = mapper.readValue(bodyChannel, Channel.class);
 
                 Channel channelInBase = channelService.findChannel(channel.getChatId());
                 if (channelInBase != null) {
@@ -119,9 +142,16 @@ public class RestController {
         }
     }
 
-    @Logging(entering = true, exiting = true)
+    /**
+     * <b>removeChannelFromChat</b> - удаляет канал и чата
+     *
+     * @param chatId        chatId чата
+     * @param channelChatId chatId канала
+     * @return Https.status
+     */
+    @Logging(entering = true, exiting = true, returnData = true)
     @PostMapping("/removeChannelFromChat")
-    public String removeChannelFromChat(@RequestHeader("chatId") String chatId,@RequestHeader("channelChatId") String channelChatId) {
+    public String removeChannelFromChat(@RequestHeader("chatId") String chatId, @RequestHeader("channelChatId") String channelChatId) {
         try {
             Chat chat = chatService.findChat(Long.parseLong(chatId));
             Channel channel = channelService.findChannel(Long.parseLong(channelChatId));
@@ -142,8 +172,14 @@ public class RestController {
         }
     }
 
+    /**
+     * <b>getChatChannelsByChatId</b> - возвращает список всех каналов в чате по ChatId
+     *
+     * @param chatId chatId чата
+     * @return List(Channel)
+     */
 
-    @Logging(entering = true, exiting = true)
+    @Logging(entering = true, exiting = true, returnData = true)
     @PostMapping("/getChatChannelsByChatId")
     public String getChatChannelsByChatId(@RequestHeader("chatId") String chatId) {
         try {
@@ -157,7 +193,13 @@ public class RestController {
         }
     }
 
-    @Logging(entering = true, exiting = true)
+    /**
+     * <b>getChannelChatsByChatId</b> - возвращает список всех чатов из канала по ChatId
+     *
+     * @param chatId chatId канала
+     * @return List(Chat)
+     */
+    @Logging(entering = true, exiting = true, returnData = true)
     @PostMapping("/getChannelChatsByChatId")
     public String getChannelChatsByChannelId(@RequestHeader("chatId") String chatId) {
         try {
@@ -172,11 +214,12 @@ public class RestController {
     }
 
     /**
-     * <b>getChannelByInviteLink</b> - возвращает объект Channel по InviteLink
+     * <b>getChannelByInviteLink</b> - возвращает объект Channel по inviteLink
      *
-     * @param InviteLink
+     * @param inviteLink ссылка приглашение в канала
      * @return
      */
+    @Logging(entering = true, exiting = true, returnData = true)
     @PostMapping("/getChannelByInviteLink")
     public String getChannelByInviteLink(@RequestHeader("inviteLink") String inviteLink) {
         try {
@@ -196,7 +239,7 @@ public class RestController {
      * @param chatId
      * @return
      */
-    @Logging(entering = true, exiting = true)
+    @Logging(entering = true, exiting = true, returnData = true)
     @PostMapping("/getChannelByChatId")
     public String getChannelByChatId(@RequestHeader String chatId) {
         try {
@@ -206,34 +249,37 @@ public class RestController {
         }
     }
 
-    /**
-     * <b>getPopularChannels</b> - возвращает 5 каналов с наибольшим числом подписчиков
-     */
-    @PostMapping("/getPopularChannels")
-    public String getPopularChannels() {
-        try {
-            List<Channel> channelList = channelService.getAllChannels().stream().sorted(Comparator.comparingInt(a -> a.getChats().size())).limit(5).toList();
-            return mapper.writeValueAsString(channelList);
-        } catch (Exception e) {
-            return e.toString();
-        }
-    }
 
     /**
-     * <b>getPopularChannels</b> - возвращает 5 каналов с наибольшим числом подписчиков
+     * <b>getChannelRating</b> - возвращает 5 наиболее популярных каналов
+     *
+     * @return List(Channel)
      */
-    @PostMapping("/deleteChannel")
-    public String deleteChannel(@RequestHeader String chatId) {
+    @Logging(entering = true, exiting = true, returnData = true)
+    @PostMapping("/getChannelRating")
+    public String getChannelRating() {
         try {
-            Channel channel = channelService.findChannel(Long.parseLong(chatId));
-            channelService.deleteChannel(channel);
-            return Status.SUCCESS.toString();
+            List<Channel> channels = channelService.getAllChannels();
+            channels.sort((a, b) -> Integer.compare(b.getChats().size(), a.getChats().size()));
+
+            if (channels.size() > 5) {
+                return mapper.writeValueAsString(channels.subList(0, 5));
+            } else {
+                return mapper.writeValueAsString(channels);
+            }
         } catch (Exception e) {
             return Status.FAIL.toString();
         }
     }
 
-    @Logging(entering = true, exiting = true)
+
+    /**
+     * <b>saveChannel</b> - сохраняет Channel
+     *
+     * @param channel
+     * @return Https.status
+     */
+    @Logging(entering = true, exiting = true, returnData = true)
     @PostMapping("/saveChannel")
     public String saveChannel(@RequestBody String channel) {
         try {
@@ -245,23 +291,19 @@ public class RestController {
         }
     }
 
-    @Logging(entering = true, exiting = true)
-    @PostMapping("/getChannelRating")
-    public String getChannelRating() {
+    /**
+     * <b>deleteChannel</b> - удаляет канал
+     */
+    @Logging(entering = true, exiting = true, returnData = true)
+    @PostMapping("/deleteChannel")
+    public String deleteChannel(@RequestHeader String chatId) {
         try {
-            List<Channel> channels = channelService.getAllChannels();
-            channels.sort((a, b) -> Integer.compare(b.getChats().size(), a.getChats().size()));
-
-            if(channels.size() > 5)
-            {
-                return  mapper.writeValueAsString(channels.subList(0,5));
-            }
-            else
-            {
-                return mapper.writeValueAsString(channels);
-            }
+            Channel channel = channelService.findChannel(Long.parseLong(chatId));
+            channelService.deleteChannel(channel);
+            return Status.SUCCESS.toString();
         } catch (Exception e) {
             return Status.FAIL.toString();
         }
     }
+
 }

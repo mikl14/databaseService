@@ -12,9 +12,11 @@ import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Pointcut;
 import org.springframework.stereotype.Component;
 import org.telegram.databaseService.annotations.Logging;
+import org.telegram.databaseService.requests.Status;
 
 import java.io.FileWriter;
 import java.io.IOException;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
@@ -33,7 +35,7 @@ public class LogAspect {
     private static final DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
 
-    @Around(value = "@annotation(logging)  && execution(* org.telegram..*(..)) ")
+    @Around(value = "@annotation(logging)")
     public Object logMethodExit(ProceedingJoinPoint joinPoint, Logging logging) throws Throwable {
         Map<String, Object> logMap = new HashMap<>();
 
@@ -67,13 +69,29 @@ public class LogAspect {
 
         }
         if (logging.returnData()) {
-            logMap.put("return", result.toString());
-            logger.log(Level.valueOf(logging.level()), result.toString());
+            if (result != null) {
+                if (result.toString().equals(Status.FAIL.toString())) {
+                    logMap.put("return", result.toString());
+                    logMap.put("level", Level.ERROR.toString());
+                    logger.log(Level.ERROR, result.toString());
+                } else {
+                    logMap.put("return", result.toString());
+                    logger.log(Level.valueOf(logging.level()), result.toString());
+                }
+
+            } else {
+                logMap.put("level", Level.WARN.toString());
+                logMap.put("return", NullPointerException.class.toString());
+                logger.log(Level.WARN, NullPointerException.class.toString());
+            }
         }
         if (logging.exiting() || logging.entering()) {
+            String currentDateString = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+            String logFileName = "logs/log-" + currentDateString + ".json";
+
             try {
                 String logJson = objectMapper.writeValueAsString(logMap);
-                FileWriter fileWriter = new FileWriter("log.json", true);
+                FileWriter fileWriter = new FileWriter(logFileName, true);
                 fileWriter.write(logJson + "\n");
                 fileWriter.close();
             } catch (IOException e) {
