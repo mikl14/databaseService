@@ -67,6 +67,21 @@ public class RestController {
     }
 
     /**
+     * <b>getAllChats</b> - возвращает все существующие чаты
+     *
+     * @return
+     */
+    @Logging(entering = true, exiting = true, returnData = true)
+    @PostMapping("/getChannelsWithOffsetAndCount")
+    public String getChannelsWithOffsetAndCount(@RequestHeader("offset") int offset,@RequestHeader("count") int count) {
+        try {
+            return mapper.writeValueAsString(channelService.getChannelsWithOffsetAndCount(offset,count));
+        } catch (Exception e) {
+            return Status.FAIL.toString();
+        }
+    }
+
+    /**
      * <b>getAllChatIdOfChats</b> - возвращает все ChatId существующих чатов
      *
      * @return List Long

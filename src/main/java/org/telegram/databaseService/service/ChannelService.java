@@ -5,6 +5,7 @@ import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cache.annotation.Caching;
 import org.springframework.context.annotation.Lazy;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.telegram.databaseService.entity.Channel;
@@ -53,5 +54,10 @@ public class ChannelService {
 
     public List<Channel> getAllChannels() {
         return channelRepository.findAll();
+    }
+
+    public List<Channel> getChannelsWithOffsetAndCount(int offset, int count) {
+        PageRequest pageRequest = PageRequest.of(offset / count, count);
+        return channelRepository.findAll(pageRequest).getContent();
     }
 }

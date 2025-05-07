@@ -30,6 +30,10 @@ public class Channel implements Serializable {
 
     @Setter
     @Getter
+    private String avatarLink;
+
+    @Setter
+    @Getter
     @JsonIgnore
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
@@ -52,6 +56,14 @@ public class Channel implements Serializable {
         this.chatId = chatId;
         this.title = title;
         this.inviteLink = inviteLink;
+        this.chats = chats;
+    }
+
+    public Channel(Long chatId, String title, String inviteLink, String avatarLink, List<Chat> chats) {
+        this.chatId = chatId;
+        this.title = title;
+        this.inviteLink = inviteLink;
+        this.avatarLink = avatarLink;
         this.chats = chats;
     }
 
