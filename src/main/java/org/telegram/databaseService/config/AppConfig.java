@@ -27,7 +27,7 @@ public class AppConfig {
     public RedisCacheManager cacheManager(RedisConnectionFactory factory) {
         return RedisCacheManager.builder(factory)
                 .cacheDefaults(RedisCacheConfiguration.defaultCacheConfig()
-                        .entryTtl(Duration.ofMinutes(30)))
+                        .entryTtl(Duration.ofMinutes(60)))
                 .build();
     }
 
