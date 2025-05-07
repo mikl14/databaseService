@@ -5,10 +5,11 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.io.Serializable;
 import java.util.List;
 
 @Entity
-public class Channel {
+public class Channel implements Serializable {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -26,6 +27,10 @@ public class Channel {
     @Setter
     @Getter
     private String inviteLink;
+
+    @Setter
+    @Getter
+    private String avatarLink;
 
     @Setter
     @Getter
@@ -51,6 +56,14 @@ public class Channel {
         this.chatId = chatId;
         this.title = title;
         this.inviteLink = inviteLink;
+        this.chats = chats;
+    }
+
+    public Channel(Long chatId, String title, String inviteLink, String avatarLink, List<Chat> chats) {
+        this.chatId = chatId;
+        this.title = title;
+        this.inviteLink = inviteLink;
+        this.avatarLink = avatarLink;
         this.chats = chats;
     }
 

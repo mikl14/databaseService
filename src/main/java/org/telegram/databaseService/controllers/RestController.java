@@ -67,6 +67,21 @@ public class RestController {
     }
 
     /**
+     * <b>getAllChats</b> - возвращает все существующие чаты
+     *
+     * @return
+     */
+    @Logging(entering = true, exiting = true, returnData = true)
+    @PostMapping("/getChannelsWithOffsetAndCount")
+    public String getChannelsWithOffsetAndCount(@RequestHeader("offset") int offset,@RequestHeader("count") int count) {
+        try {
+            return mapper.writeValueAsString(channelService.getChannelsWithOffsetAndCount(offset,count));
+        } catch (Exception e) {
+            return Status.FAIL.toString();
+        }
+    }
+
+    /**
      * <b>getAllChatIdOfChats</b> - возвращает все ChatId существующих чатов
      *
      * @return List Long
@@ -115,7 +130,7 @@ public class RestController {
             {
                 removeChannelFromChat(chatId, String.valueOf(channelId));
             }
-
+            chat = chatService.findChat(Long.parseLong(chatId));
             chatService.deleteChat(chat);
             return Status.SUCCESS.toString();
         } catch (Exception e) {
@@ -141,21 +156,22 @@ public class RestController {
 
                 Channel channel = mapper.readValue(bodyChannel, Channel.class);
 
-                Channel channelInBase = channelService.findChannel(channel.getChatId());
-                if (channelInBase != null) {
+                try {
+                    Channel channelInBase = channelService.findChannel(channel.getChatId());
                     channelInBase.addChat(chat);
                     channelInBase.setTitle(channel.getTitle());
                     channelInBase.setInviteLink(channel.getInviteLink());
                     channelService.saveChannel(channelInBase);
                     chat.addChannel(channelInBase);
-                } else {
+                }
+                catch (NoSuchElementException e)
+                {
                     channel.setChats(new ArrayList<>());
                     channel.addChat(chat);
 
                     channelService.saveChannel(channel);
                     chat.addChannel(channel);
                 }
-
                 chatService.saveChat(chat);
 
                 return Status.SUCCESS.toString();
